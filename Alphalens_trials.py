@@ -615,10 +615,10 @@ def train_valid_test_split(all_x, all_y, train_size, valid_size, test_size):
     y_train, y_valid, y_test = all_y.ix[train_idx], all_y.ix[valid_idx], all_y.ix[test_idx]
     return x_train,x_valid,x_test,y_train,y_valid,y_test
 
-'''use some of the features and the 5 day returns for our target'''
+#####  use some of the features and the 5 day returns for our target
 
 
-'''
+
 features = [
     'Mean_Reversion_Sector_Neutral_Smoothed', 'Momentum_1YR',
     'Overnight_Sentiment_Smoothed', 'adv_120d', 'adv_20d',
@@ -626,6 +626,11 @@ features = [
     'market_vol_20d', 'volatility_20d',
     'is_Janaury', 'is_December', 'weekday',
     'month_end', 'month_start', 'qtr_end', 'qtr_start'] + sector_columns
+
+
+
+
+
 '''
         
 features_try = ['Mean_Reversion_Sector_Neutral_Smoothed']
@@ -636,7 +641,7 @@ all_factors.dtypes
 all_factors.index.levels[0]
 all_factors.index.get_level_values(1)
 
-   
+
 all_factors_try =  all_factors['Mean_Reversion_Sector_Neutral_Smoothed']   
   
 
@@ -680,17 +685,19 @@ all_factors_final_try.index.get_level_values(1)
 
 
 
-target_label = 'target'
 
 temp_try_final = all_factors_final_try.dropna().copy()
 X = temp_try_final[features_try]
 y = temp_try_final[target_label]
 
 '''
+
+target_label = 'target'
+
 temp = all_factors.dropna().copy()
 X = temp[features]
 y = temp[target_label]
-'''
+
 
 X_train, X_valid, X_test, y_train, y_valid, y_test = train_valid_test_split(X, y, 0.6, 0.2, 0.2)
 
@@ -716,8 +723,13 @@ simple_clf = DecisionTreeClassifier(
     random_state=clf_random_state)
 simple_clf.fit(X_train, y_train)
 
+'''
 display(plot_tree_classifier(simple_clf, feature_names=features_try))
 rank_features_by_importance(simple_clf.feature_importances_, features_try)
+'''
+
+display(plot_tree_classifier(simple_clf, feature_names=features))
+rank_features_by_importance(simple_clf.feature_importances_, features)
 
 '''
 observe for information gain and Gini impurity
@@ -872,11 +884,11 @@ factor_names = [
 
 
 prob_array=[-1,1]
-alpha_score = clf.predict_proba(X_train).dot(np.array(prob_array))
+alpha_score = clf.predict_proba(X_test).dot(np.array(prob_array))
 
 # Add Alpha Score to rest of the factors
 alpha_score_label = 'AI_ALPHA'
-factors_with_alpha = all_factors.loc[X_train.index].copy()
+factors_with_alpha = all_factors.loc[X_test.index].copy()
 factors_with_alpha.head()
 factors_with_alpha[alpha_score_label] = alpha_score
 
@@ -903,6 +915,11 @@ col4 --> and (optionally) the group the asset belongs to
 factor_data = build_factor_data(factors_with_alpha[factor_names + [alpha_score_label]], all_pricing)
 type(factor_data)
 
+
+signal_try = factors_with_alpha[alpha_score_label]
+signal_try_unstack = signal_try.unstack(level=1)
+signal_try_unstack.sum(axis=1)
+
 #factor_data_multi_period = build_factor_data(factors_with_alpha[factor_names + [alpha_score_label]], all_pricing)
 
 
@@ -911,8 +928,46 @@ type(factor_data)
 
 
 cleaned_smooth_factor = factor_data['AI_ALPHA']
+type (cleaned_smooth_factor)
+
 cleaned_smooth_factor.head()
 cleaned_smooth_factor.tail()
+
+
+signal_more_probable = cleaned_smooth_factor['factor']
+signal_more_probable_unstack = signal_more_probable.unstack(level=1)
+
+#cross check
+signal_more_probable_unstack.sum(axis=1)
+
+
+
+fact_weights = al.performance.factor_weights(cleaned_smooth_factor, demeaned=True, group_adjust=False, equal_weight=False)
+fact_weights_unstack = fact_weights.unstack(level=1)
+fact_weights_unstack.sum(axis=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
