@@ -627,7 +627,7 @@ features = [
     'is_Janaury', 'is_December', 'weekday',
     'month_end', 'month_start', 'qtr_end', 'qtr_start'] + sector_columns
 
-
+type (features)
 
 
 
@@ -697,6 +697,22 @@ target_label = 'target'
 temp = all_factors.dropna().copy()
 X = temp[features]
 y = temp[target_label]
+
+'''
+type(all_factors)
+tempX = all_factors[features]
+tempX.index.levels[0]
+type (tempX)
+tempX.index.get_level_values(0)
+tempy = all_factors[target_label]
+
+X = tempX.dropna().copy
+type (X)
+X.index.levels[0]
+X.index.get_level_values(0)
+y = tempy.dropna().copy
+type(y)
+'''
 
 
 X_train, X_valid, X_test, y_train, y_valid, y_test = train_valid_test_split(X, y, 0.6, 0.2, 0.2)
@@ -893,6 +909,15 @@ factors_with_alpha.head()
 factors_with_alpha[alpha_score_label] = alpha_score
 
 
+
+signal_try = factors_with_alpha[alpha_score_label]
+signal_try_unstack = signal_try.unstack(level=1)
+
+##Cross check
+signal_try_unstack.sum(axis=1)
+signal_try_unstack.sum(axis=1).max()
+
+
 def build_factor_data(factor_data, pricing):
     return {factor_name: al.utils.get_clean_factor_and_forward_returns(factor=data, prices=pricing, periods=[1]) #period = 1 1 day forward return to predict next day price using last 5 days data on which model is trained
         for factor_name, data in factor_data.iteritems()}
@@ -916,35 +941,37 @@ factor_data = build_factor_data(factors_with_alpha[factor_names + [alpha_score_l
 type(factor_data)
 
 
-signal_try = factors_with_alpha[alpha_score_label]
-signal_try_unstack = signal_try.unstack(level=1)
-signal_try_unstack.sum(axis=1)
-
-#factor_data_multi_period = build_factor_data(factors_with_alpha[factor_names + [alpha_score_label]], all_pricing)
-
-
-#from alphalens.tears import create_full_tear_sheet
-#create_full_tear_sheet(factor_data)
-
-
 cleaned_smooth_factor = factor_data['AI_ALPHA']
 type (cleaned_smooth_factor)
 
 cleaned_smooth_factor.head()
 cleaned_smooth_factor.tail()
 
-
 signal_more_probable = cleaned_smooth_factor['factor']
 signal_more_probable_unstack = signal_more_probable.unstack(level=1)
 
 #cross check
 signal_more_probable_unstack.sum(axis=1)
+signal_more_probable_unstack.sum(axis=1).max()
+
+
+
+
+###########
+### Note that signal_try dataframe and signal_more_proable dataframe
+###  are same and  both are essentially aplpha score. However they are not delta neutral (market neutral)
+### long short portfolio as o/p of signal_more_probable_unstack.sum(axis=1).max() ==> 0.6794, which is significant no. for a given trading date.
+### however fact_weights fact_weights_unstack.sum(axis=1).max() ==> 9.714 * e to pwer -17, is true delta neutral long short portfolio
+###########
+
 
 
 
 fact_weights = al.performance.factor_weights(cleaned_smooth_factor, demeaned=True, group_adjust=False, equal_weight=False)
 fact_weights_unstack = fact_weights.unstack(level=1)
 fact_weights_unstack.sum(axis=1)
+fact_weights_unstack.sum(axis=1).max()
+fact_weights_unstack.tail()
 
 
 
@@ -961,6 +988,12 @@ fact_weights_unstack.sum(axis=1)
 
 
 
+
+#factor_data_multi_period = build_factor_data(factors_with_alpha[factor_names + [alpha_score_label]], all_pricing)
+
+
+#from alphalens.tears import create_full_tear_sheet
+#create_full_tear_sheet(factor_data)
 
 
 
